@@ -78,7 +78,7 @@ def post_pid_comment_cid(cid, pid=None, anything=None, v=None):
 		post._preloaded_comments += [parent]
 
 		c = parent
-
+		print(session.get("read_comments", []))
 		session["read_comments"].append(c.id)
 
 		context -= 1
