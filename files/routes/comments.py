@@ -63,6 +63,14 @@ def post_pid_comment_cid(cid, pid=None, anything=None, v=None):
 	except: context = 0
 	comment_info = comment
 	c = comment
+
+	read = list(session.get("read_comments", []))
+
+	if session.get("read_comments"):
+		session["read_comments"] += [c.id]
+	else:
+		session["read_comments"] = [c.id]
+
 	while context > 0 and c.level > 1:
 
 		parent = get_comment(c.parent_comment_id, v=v)
@@ -70,16 +78,11 @@ def post_pid_comment_cid(cid, pid=None, anything=None, v=None):
 		post._preloaded_comments += [parent]
 
 		c = parent
+
+		session["read_comments"].append(c.id)
+
 		context -= 1
 	top_comment = c
-
-	read = list(session.get("read_comments", []))
-
-	# mark all opened comments as read
-	if session.get("read_comments"):
-		session["read_comments"] += [x.id for x in post._preloaded_comments]
-	else:
-		session["read_comments"] = [x.id for x in post._preloaded_comments]
 
 	if v: defaultsortingcomments = v.defaultsortingcomments
 	else: defaultsortingcomments = "top"
