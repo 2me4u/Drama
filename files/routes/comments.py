@@ -71,6 +71,8 @@ def post_pid_comment_cid(cid, pid=None, anything=None, v=None):
 	else:
 		session["read_comments"] = [c.id]
 
+	print(session["read_comments"])
+
 	while context > 0 and c.level > 1:
 
 		parent = get_comment(c.parent_comment_id, v=v)
