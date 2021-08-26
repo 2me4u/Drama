@@ -70,10 +70,7 @@ def post_id(pid, anything=None, v=None):
 	post = get_post(pid, v=v)
 
 	# read comment ids
-	read = session.get("read_comments", [])
-
-	# clone of `read`, not changed here, highlight comment if not in this list
-	highlight = list(session.get("read_comments", []))
+	read = list(session.get("read_comments", []))
 
 	if v:
 		votes = g.db.query(CommentVote).filter_by(user_id=v.id).subquery()
@@ -132,7 +129,7 @@ def post_id(pid, anything=None, v=None):
 			comment._is_blocked = c[3] or 0
 
 			# mark all opened comments as read
-			read.append(c[0].id)
+			session["read_comments"].append(c[0].id)
 
 			output.append(comment)
 
@@ -176,7 +173,7 @@ def post_id(pid, anything=None, v=None):
 					g.db.add(comment)
 
 		# mark all opened comments as read
-		read += [x.id for x in comments]
+		session["read_comments"] += [x.id for x in comments]
 
 		post.preloaded_comments = [x for x in comments if not (x.author and x.author.shadowbanned) or (v and v.id == x.author_id)]
 
@@ -219,7 +216,7 @@ def post_id(pid, anything=None, v=None):
 	post.tree_comments()
 
 	if request.headers.get("Authorization"): return post.json
-	else: return post.rendered_page(v=v, sort=sort, read=highlight)
+	else: return post.rendered_page(v=v, sort=sort, read=read)
 
 
 @app.post("/edit_post/<pid>")
