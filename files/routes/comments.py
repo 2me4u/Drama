@@ -79,6 +79,7 @@ def post_pid_comment_cid(cid, pid=None, anything=None, v=None):
 
 		c = parent
 		print(session.get("read_comments", []))
+		print(c.id)
 		session["read_comments"].append(c.id)
 
 		context -= 1
