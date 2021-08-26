@@ -129,7 +129,10 @@ def post_id(pid, anything=None, v=None):
 			comment._is_blocked = c[3] or 0
 
 			# mark all opened comments as read
-			session["read_comments"].append(c[0].id)
+			if session.get("read_comments"):
+				session["read_comments"].append(c[0].id)
+			else:
+				session["read_comments"] = [c[0].id]
 
 			output.append(comment)
 
@@ -173,7 +176,10 @@ def post_id(pid, anything=None, v=None):
 					g.db.add(comment)
 
 		# mark all opened comments as read
-		session["read_comments"] += [x.id for x in comments]
+		if session.get("read_comments"):
+			session["read_comments"] += [x.id for x in comments]
+		else:
+			session["read_comments"] = [x.id for x in comments]
 
 		post.preloaded_comments = [x for x in comments if not (x.author and x.author.shadowbanned) or (v and v.id == x.author_id)]
 
