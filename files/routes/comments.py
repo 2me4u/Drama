@@ -73,6 +73,14 @@ def post_pid_comment_cid(cid, pid=None, anything=None, v=None):
 		context -= 1
 	top_comment = c
 
+	read = list(session.get("read_comments", []))
+
+	# mark all opened comments as read
+	if session.get("read_comments"):
+		session["read_comments"] += [x.id for x in post._preloaded_comments]
+	else:
+		session["read_comments"] = [x.id for x in post._preloaded_comments]
+
 	if v: defaultsortingcomments = v.defaultsortingcomments
 	else: defaultsortingcomments = "top"
 	sort=request.args.get("sort", defaultsortingcomments)
@@ -119,7 +127,7 @@ def post_pid_comment_cid(cid, pid=None, anything=None, v=None):
 			comment._is_blocked = c[3] or 0
 
 	if request.headers.get("Authorization"): return top_comment.json
-	else: return post.rendered_page(v=v, sort=sort, comment=top_comment, comment_info=comment_info)
+	else: return post.rendered_page(v=v, read=read, sort=sort, comment=top_comment, comment_info=comment_info)
 
 
 @app.post("/comment")
