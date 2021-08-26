@@ -61,18 +61,6 @@ def post_id(pid, anything=None, v=None):
 	if v: defaultsortingcomments = v.defaultsortingcomments
 	else: defaultsortingcomments = "top"
 	sort=request.args.get("sort", defaultsortingcomments)
-	
-
-
-
-
-
-
-
-
-
-
-
 
 	try: pid = int(pid)
 	except:
@@ -80,6 +68,12 @@ def post_id(pid, anything=None, v=None):
 		except: abort(404)
 
 	post = get_post(pid, v=v)
+
+	# read comment ids
+	read = session.get("read_comments", [])
+
+	# clone of `read`, not changed here, highlight comment if not in this list
+	highlight = list(session.get("read_comments", []))
 
 	if v:
 		votes = g.db.query(CommentVote).filter_by(user_id=v.id).subquery()
@@ -136,6 +130,10 @@ def post_id(pid, anything=None, v=None):
 			comment.voted = c[1] or 0
 			comment._is_blocking = c[2] or 0
 			comment._is_blocked = c[3] or 0
+
+			# mark all opened comments as read
+			read.append(c[0].id)
+
 			output.append(comment)
 
 		post.preloaded_comments = output
@@ -176,6 +174,9 @@ def post_id(pid, anything=None, v=None):
 					comment.upvotes = g.db.query(CommentVote).filter_by(comment_id=comment.id, vote_type=1).count()
 					comment.downvotes = g.db.query(CommentVote).filter_by(comment_id=comment.id, vote_type=-1).count()
 					g.db.add(comment)
+
+		# mark all opened comments as read
+		read += [x.id for x in comments]
 
 		post.preloaded_comments = [x for x in comments if not (x.author and x.author.shadowbanned) or (v and v.id == x.author_id)]
 
@@ -218,7 +219,7 @@ def post_id(pid, anything=None, v=None):
 	post.tree_comments()
 
 	if request.headers.get("Authorization"): return post.json
-	else: return post.rendered_page(v=v, sort=sort)
+	else: return post.rendered_page(v=v, sort=sort, read=highlight)
 
 
 @app.post("/edit_post/<pid>")
